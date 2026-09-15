@@ -111,7 +111,7 @@
         }
 
         function concluirPedido(id) {
-            fetch(`http://localhost:3000/api/pedido/${id}/status`, {
+            fetch(`/api/pedido/${id}/status`, {
                 method: 'PUT'
             })
             .then(() => buscarPedidos());
