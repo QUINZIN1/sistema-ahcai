@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahçaí - Açaí Original</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 550px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { color: #5B21B6; text-align: center; margin-bottom: 5px; }
+        .subtitulo { text-align: center; color: #666; margin-bottom: 20px; font-size: 14px; font-weight: bold; }
+        .etapa { margin-top: 20px; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+        select, input[type="text"], input[type="tel"], textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        textarea { resize: vertical; height: 70px; }
+        
+        /* Estilo para a lista de complementos com contadores */
+        .lista-complementos {
+            background: #fafafa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 5px;
+        }
+        .item-complemento {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .contador {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .contador button {
+            background: #7C3AED;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 0;
+            padding: 0;
+            font-size: 16px;
+        }
+        .contador button:hover {
+            background: #6D28D9;
+        }
+        .contador span {
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .bloco-qtd-copos {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f3e8ff;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border: 1px solid #d8b4fe;
+        }
+        .bloco-qtd-copos label {
+            margin-top: 0;
+            color: #5B21B6;
+        }
+
+        .preco-destaque { margin-top: 15px; font-size: 20px; color: #16A34A; font-weight: bold; text-align: right; }
+        button.btn-finalizar { background: #7C3AED; color: white; border: none; padding: 14px; width: 100%; margin-top: 15px; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
+        button.btn-finalizar:hover { background: #6D28D9; }
+
+        /* Modal / Caixa de Checkout final */
+        #modalCheckout {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-conteudo {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-conteudo h2 {
+            color: #5B21B6;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .btn-voltar {
+            background: #6b7280;
+            margin-top: 8px;
+        }
+        .btn-voltar:hover {
+            background: #4b5563;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> Ahçaí 🍇</h1>
+        <div class="subtitulo">Açaí Original - Monte o seu!</div>
+        
+        <!-- ETAPA 1: Escolha do Sabor Base -->
+        <div class="etapa">
+            <label for="sabor">1. Escolha o Sabor Base:</label>
+            <select id="sabor" onchange="calcularPreco()">
+                <option value="Banana">Banana</option>
+                <option value="Tradicional">Tradicional</option>
+                <option value="Morango">Morango</option>
+                <option value="Gengibre">Gengibre</option>
+                <option value="Hortelã">Hortelã</option>
+            </select>
+        </div>
+
+        <!-- ETAPA 2: Forma de Adoçar -->
+        <div class="etapa">
+            <label for="adocamento">2. Como deseja adoçar?</label>
+            <select id="adocamento" onchange="calcularPreco()">
+                <option value="Mascavo" data-adicional="0">Açúcar Mascavo (Padrão)</option>
+                <option value="Banana" data-adicional="0">Com Banana (Sem açúcar)</option>
+                <option value="Puro" data-adicional="3.00">Puro / Mais Polpa (+ R$ 3,00)</option>
+                <option value="Stevia" data-adicional="3.00">Stévia / Adoçante (+ R$ 3,00)</option>
+                <option value="Mel" data-adicional="5.00">Mel (+ R$ 5,00)</option>
+            </select>
+        </div>
+
+        <!-- ETAPA 3: Escolha do Tamanho -->
+        <div class="etapa">
+            <label for="tamanho">3. Escolha o Tamanho:</label>
+            <select id="tamanho" onchange="calcularPreco()">
+                <option value="300ml" data-base="23">300 ml - R$ 23,00 (Banana)</option>
+                <option value="500ml" data-base="30">500 ml - R$ 30,00 (Banana)</option>
+                <option value="700ml" data-base="35">700 ml - R$ 35,00 (Banana)</option>
+                <option value="1000ml" data-base="52">1 Litro - R$ 52,00 (Banana)</option>
+            </select>
+        </div>
+
+        <!-- ETAPA 4: Acompanhamentos e Complementos com Quantidade -->
+        <div class="etapa">
+            <label>4. Escolha os Acompanhamentos:</label>
+            <div class="lista-complementos" id="containerComplementos">
+                <!-- Gerado via JavaScript -->
+            </div>
+        </div>
+
+        <!-- ETAPA 5: Quantidade de Copos Iguais -->
+        <div class="bloco-qtd-copos">
+            <label>Quantos copos deste modelo?</label>
+            <div class="contador">
+                <button type="button" onclick="alterarQtdCopos(-1)">-</button>
+                <span id="qtdCoposValor" style="font-size: 18px;">1</span>
+                <button type="button" onclick="alterarQtdCopos(1)">+</button>
+            </div>
+        </div>
+
+        <!-- Visor do Preço Final -->
+        <div class="preco-destaque" id="visorPreco">Total: R$ 23,00</div>
+
+        <button class="btn-finalizar" onclick="abrirCheckout()">Continuar para Entrega</button>
+    </div>
+
+    <!-- MODAL DE CHECKOUT (Contato e Endereço) -->
+    <div id="modalCheckout">
+        <div class="modal-conteudo">
+            <h2>Finalizar Pedido</h2>
+            
+            <label for="cliente">Seu Nome: *</label>
+            <input type="text" id="cliente" placeholder="Digite seu nome completo" required>
+
+            <label for="telefone">WhatsApp / Contato: *</label>
+            <input type="tel" id="telefone" placeholder="(00) 00000-0000" required>
+
+            <label for="endereco">Endereço de Entrega: *</label>
+            <textarea id="endereco" placeholder="Rua, número, bairro e referência" required></textarea>
+
+            <button class="btn-finalizar" onclick="enviarPedido()">Confirmar e Enviar Pedido</button>
+            <button class="btn-finalizar btn-voltar" onclick="fecharCheckout()">Voltar ao Açaí</button>
+        </div>
+    </div>
+
+    <script>
+        let quantidadeCopos = 1;
+
+        const complementosObj = {
+            'Granola': { qtd: 0, preco: 4.00 },
+            'Leite Condensado': { qtd: 0, preco: 4.00 },
+            'Leite em Pó': { qtd: 0, preco: 4.00 },
+            'Farinha Láctea': { qtd: 0, preco: 4.00 },
+            'Amendoim': { qtd: 0, preco: 4.00 },
+            'Aveia': { qtd: 0, preco: 3.00 },
+            'Banana': { qtd: 0, preco: 3.00 },
+            'Farinha de Tapioca': { qtd: 0, preco: 3.00 },
+            'Leite Ninho': { qtd: 0, preco: 6.00 },
+            'Paçoquita': { qtd: 0, preco: 1.00 },
+            'Paçoquita Diet': { qtd: 0, preco: 4.00 },
+            'Morango': { qtd: 0, preco: 7.00 },
+            'Mel': { qtd: 0, preco: 4.00 },
+            'M&M\'s': { qtd: 0, preco: 11.00 },
+            'Nutella': { qtd: 0, preco: 12.00 },
+            'Ovomaltine': { qtd: 0, preco: 5.00 },
+            'Castanha de Caju': { qtd: 0, preco: 8.00 },
+            'Flocos de Coco': { qtd: 0, preco: 6.00 },
+            'Nibs de Cacau': { qtd: 0, preco: 7.00 }
+        };
+
+        function renderizarComplementos() {
+            const container = document.getElementById('containerComplementos');
+            container.innerHTML = '';
+
+            for (let nome in complementosObj) {
+                let chaveId = nome.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                let precoTexto = complementosObj[nome].preco > 0 ? ` (+R$ ${complementosObj[nome].preco.toFixed(2).replace('.', ',')})` : '';
+
+                let htmlItem = `
+                    <div class="item-complemento">
+                        <span>${nome} ${precoTexto}</span>
+                        <div class="contador">
+                            <button type="button" onclick="alterarQtd('${nome}', -1)">-</button>
+                            <span id="qtd-${chaveId}">0</span>
+                            <button type="button" onclick="alterarQtd('${nome}', 1)">+</button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += htmlItem;
+            }
+        }
+
+        function alterarQtd(nomeItem, mudanca) {
+            if (complementosObj[nomeItem]) {
+                let novaQtd = complementosObj[nomeItem].qtd + mudanca;
+                if (novaQtd >= 0 && novaQtd <= 10) {
+                    complementosObj[nomeItem].qtd = novaQtd;
+                    let chaveId = nomeItem.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    document.getElementById(`qtd-${chaveId}`).innerText = novaQtd;
+                    calcularPreco(); 
+                }
+            }
+        }
+
+        function alterarQtdCopos(mudanca) {
+            let novaQtd = quantidadeCopos + mudanca;
+            if (novaQtd >= 1 && novaQtd <= 20) {
+                quantidadeCopos = novaQtd;
+                document.getElementById('qtdCoposValor').innerText = quantidadeCopos;
+                calcularPreco();
+            }
+        }
+
+        function calcularPreco() {
+            const selectTamanho = document.getElementById('tamanho');
+            const precoBase = parseFloat(selectTamanho.options[selectTamanho.selectedIndex].getAttribute('data-base'));
+            const sabor = document.getElementById('sabor').value;
+            
+            const selectAdocamento = document.getElementById('adocamento');
+            const adicionalAdocamento = parseFloat(selectAdocamento.options[selectAdocamento.selectedIndex].getAttribute('data-adicional'));
+            
+            let acrescimoSabor = 0;
+            const tamanhoValor = selectTamanho.value;
+
+            if (sabor !== 'Banana') {
+                acrescimoSabor = (tamanhoValor === '1000ml') ? 3.00 : 1.00;
+            }
+
+            let totalComplementos = 0;
+            for (let item in complementosObj) {
+                totalComplementos += complementosObj[item].qtd * complementosObj[item].preco;
+            }
+
+            const precoUnitario = precoBase + acrescimoSabor + adicionalAdocamento + totalComplementos;
+            const precoFinal = precoUnitario * quantidadeCopos;
+
+            document.getElementById('visorPreco').innerText = `Total (${quantidadeCopos}x): R$ ${precoFinal.toFixed(2).replace('.', ',')}`;
+            return precoFinal;
+        }
+
+        function abrirCheckout() {
+            // Abre a janelinha de preenchimento de dados
+            document.getElementById('modalCheckout').style.display = 'flex';
+        }
+
+        function fecharCheckout() {
+            document.getElementById('modalCheckout').style.display = 'none';
+        }
+
+        function enviarPedido() {
+            const cliente = document.getElementById('cliente').value.trim();
+            const telefone = document.getElementById('telefone').value.trim();
+            const endereco = document.getElementById('endereco').value.trim();
+
+            // Validações obrigatórias exigidas
+            if (!cliente) {
+                alert('Obrigatório! Por favor, digite seu nome.');
+                document.getElementById('cliente').focus();
+                return;
+            }
+
+            if (!telefone) {
+                alert('Obrigatório! Por favor, informe seu telefone/WhatsApp.');
+                document.getElementById('telefone').focus();
+                return;
+            }
+
+            if (!endereco) {
+                alert('Obrigatório! Por favor, informe o endereço de entrega.');
+                document.getElementById('endereco').focus();
+                return;
+            }
+
+            const sabor = document.getElementById('sabor').value;
+            const adocamento = document.getElementById('adocamento').value;
+            const tamanho = document.getElementById('tamanho').value;
+
+            let descComplementos = [];
+            for (let item in complementosObj) {
+                if (complementosObj[item].qtd > 0) {
+                    descComplementos.push(`${complementosObj[item].qtd}x ${item}`);
+                }
+            }
+
+            const precoTotal = calcularPreco();
+
+            const dados = { 
+                cliente, 
+                telefone,
+                endereco,
+                quantidadeCopos: quantidadeCopos,
+                saborBase: sabor,
+                formaAdocamento: adocamento,
+                tamanho, 
+                complementos: descComplementos.join(', ') || 'Nenhum',
+                precoTotal: `R$ ${precoTotal.toFixed(2).replace('.', ',')}`
+            };
+
+            fetch('/api/pedido', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados)
+
+            })
+            .then(response => response.json())
+            .then(resultado => {
+                alert(`Pedido de ${quantidadeCopos}x Açaí para ${cliente} enviado com sucesso! 🚀`);
+                fecharCheckout();
+                console.log(resultado);
+            })
+            .catch(erro => {
+                alert('Erro ao enviar o pedido. O servidor está ligado?');
+                console.error(erro);
+            });
+        }
+
+        renderizarComplementos();
+        calcularPreco();
+    </script>
+</body>
+</html>

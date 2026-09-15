@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahçaí - Painel da Cozinha</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
+        h1 { text-align: center; color: #a855f7; margin-bottom: 5px; }
+        .subtitulo { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 14px; }
+        
+        .grid-pedidos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card-pedido {
+            background: #1e293b;
+            border-left: 6px solid #a855f7;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card-pedido.pronto {
+            border-left-color: #22c55e;
+            opacity: 0.6;
+        }
+        .topo-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+        }
+        .cliente { font-size: 18px; font-weight: bold; color: #f1f5f9; }
+        .horario { font-size: 12px; color: #94a3b8; }
+        .detalhes { font-size: 14px; margin-bottom: 10px; line-height: 1.5; }
+        .detalhes span { color: #c084fc; font-weight: bold; }
+        .preco { font-size: 16px; color: #4ade80; font-weight: bold; margin-bottom: 12px; }
+        
+        button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        button:hover { background: #6d28d9; }
+        .card-pedido.pronto button { background: #16a34a; }
+        .sem-pedidos { text-align: center; color: #64748b; margin-top: 50px; font-size: 18px; grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+    <h1>🍇 Ahçaí - Painel de Pedidos</h1>
+    <div class="subtitulo">Acompanhamento de pedidos em tempo real</div>
+
+    <div class="grid-pedidos" id="containerPedidos">
+        <!-- Os pedidos entram aqui dinamicamente -->
+    </div>
+
+    <script>
+        function buscarPedidos() {
+            // Se estiver rodando local ou via ngrok, ajuste a URL se necessário. 
+            // Como o painel roda na mesma máquina/servidor, '/api/pedidos' funciona perfeitamente.
+            fetch('http://localhost:3000/api/pedidos')
+                .then(res => res.json())
+                .then(pedidos => {
+                    const container = document.getElementById('containerPedidos');
+                    container.innerHTML = '';
+
+                    if (pedidos.length === 0) {
+                        container.innerHTML = `<div class="sem-pedidos">Nenhum pedido no momento. Aguardando clientes... 🍇</div>`;
+                        return;
+                    }
+
+                    pedidos.forEach(p => {
+                        let isPronto = p.status === 'Pronto';
+                        let htmlCard = `
+                            <div class="card-pedido ${isPronto ? 'pronto' : ''}">
+                                <div>
+                                    <div class="topo-card">
+                                        <div class="cliente">${p.cliente}</div>
+                                        <div class="horario">${p.horario}</div>
+                                    </div>
+                                    <div class="detalhes">
+                                        <div><span>Qtd:</span> ${p.quantidadeCopos}x Copo(s) de ${p.tamanho}</div>
+                                        <div><span>Sabor:</span> ${p.saborBase}</div>
+                                        <div><span>Adoçar:</span> ${p.formaAdocamento}</div>
+                                        <div><span>Acompanhamentos:</span> ${p.complementos}</div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="preco">${p.precoTotal}</div>
+                                    <button onclick="concluirPedido(${p.id})">
+                                        ${isPronto ? 'Pedido Concluído ✓' : 'Marcar como Pronto ➔'}
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        container.innerHTML += htmlCard;
+                    });
+                })
+                .catch(err => console.error('Erro ao buscar pedidos:', err));
+        }
+
+        function concluirPedido(id) {
+            fetch(`http://localhost:3000/api/pedido/${id}/status`, {
+                method: 'PUT'
+            })
+            .then(() => buscarPedidos());
+        }
+
+        // Atualiza a tela a cada 3 segundos buscando novos pedidos do servidor
+        setInterval(buscarPedidos, 3000);
+        buscarPedidos(); // Executa logo de cara
+    </script>
+</body>
+</html>
