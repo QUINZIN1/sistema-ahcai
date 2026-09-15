@@ -117,9 +117,10 @@
             .then(() => buscarPedidos());
         }
 
-        // Atualiza a tela a cada 3 segundos buscando novos pedidos do servidor
-        setInterval(buscarPedidos, 3000);
-        buscarPedidos(); // Executa logo de cara
+        // Atualiza os pedidos automaticamente a cada 3 segundos
+setInterval(() => {
+    buscarPedidos();
+}, 3000);
     </script>
 </body>
 </html>
